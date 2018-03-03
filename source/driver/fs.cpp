@@ -34,12 +34,13 @@ ResultCode FileSystemImpl::Format(Uid uid) {
 
   m_superblock->magic = {{'S', 'F', 'F', 'S'}};
 
-  // Mark the boot1, boot2 and FS metadata regions as reserved
-  constexpr u16 end = SUPERBLOCK_START_CLUSTER + NUMBER_OF_SUPERBLOCKS * CLUSTERS_PER_SUPERBLOCK;
-  for (u16 i = 0; i < 64; ++i)
-    m_superblock->fat[i] = CLUSTER_RESERVED;
-  for (u16 i = SUPERBLOCK_START_CLUSTER; i < end; ++i)
-    m_superblock->fat[i] = CLUSTER_RESERVED;
+  for (size_t i = 0; i < m_superblock->fat.size(); ++i) {
+    // Mark the boot1, boot2 and FS metadata regions as reserved
+    if (i < 64 || i >= SUPERBLOCK_START_CLUSTER)
+      m_superblock->fat[i] = CLUSTER_RESERVED;
+    else
+      m_superblock->fat[i] = CLUSTER_UNUSED;
+  }
 
   // Initialise the FST
   m_superblock->fst.fill(FstEntry{});
